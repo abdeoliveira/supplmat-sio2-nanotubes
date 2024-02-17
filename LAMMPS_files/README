@@ -1,0 +1,5 @@
+This is an example of the LAMMPS input file and a system.data file,
+as used in this work, for the (64,64) tube. 
+
+You can easily adapt both files to work with any of the other 
+tubes using the relaxed.*.xyz files contained in the previous folder. 

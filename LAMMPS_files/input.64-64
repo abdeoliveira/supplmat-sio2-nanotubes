@@ -1,0 +1,61 @@
+# SiO2 Nanotube 
+log log.64-64
+#================================
+variable label string 64-64
+variable repz equal 2
+variable ptargetz equal 0.0
+variable ftol equal 40.0E-3
+#=================================
+boundary f f p
+units metal
+atom_style charge
+read_data system.data.${label}
+replicate 1 1 ${repz}
+#---------------------------------
+pair_style   tersoff
+pair_coeff * * SiO.tersoff Si O
+#---------------------------------
+dump   1 all xyz 50000 dump.${label}.xyz
+dump_modify 1 element Si O
+neigh_modify every 1 delay 0 check yes
+#----------------------------------
+variable zlat equal (zhi-zlo)/${repz}
+variable eform equal pe
+variable natoms equal atoms
+variable fmax equal fmax
+variable fnorm equal fnorm
+thermo_style custom step  pe press vol zlo zhi v_zlat 
+thermo       5000
+fix 1 all box/relax z 2000
+fix 2 all setforce 0 0 NULL
+minimize 0.0 ${ftol} 500000 50000
+unfix 2
+fix 1 all box/relax z ${ptargetz}
+minimize 0.0 ${ftol} 500000 500000
+unfix 1
+write_restart tmp.restart.0K.${label}
+fix 3 all print 1 "${natoms} ${eform} ${zlat} ${fmax} ${fnorm}" file min.${label} screen no
+dump   2 all xyz 1 relaxed.${label}.xyz
+dump_modify 2 element Si O
+run 0
+unfix 3
+undump 2
+quit #DELETE IT TO GO FURTHER
+#-----------------------------------
+velocity     all create 10 28459 rot yes dist gaussian mom yes
+thermo_style one
+timestep 0.00025
+#-----------------------------------
+fix 2 all npt temp 10 300 0.1 z ${ptargetz} ${ptargetz}  0.1
+run 4000000
+#-----------------------------------
+fix 2 all npt temp 300 300 0.1 z ${ptargetz} ${ptargetz}  0.1
+run 4000000
+write_restart tmp.restart.300K.${label}
+#-----------------------------------
+fix 2 all npt temp 300 600 0.1 z ${ptargetz} ${ptargetz} 0.1
+run 4000000
+#-----------------------------------
+fix 2 all npt temp 600 600 0.1 z ${ptargetz} ${ptargetz} 0.1
+run 4000000
+write_restart tmp.restart.600K.${label}
